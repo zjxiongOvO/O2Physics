@@ -2429,6 +2429,11 @@ void VarManager::FillPairMC(T1 const& t1, T2 const& t2, float* values, PairCandi
   values[kEta] = v12.Eta();
   values[kPhi] = v12.Phi();
   values[kRap] = -v12.Rapidity();
+
+  values[kPt1] = t1.pt();
+  values[kPt2] = t2.pt();
+  values[kEta1] = t1.eta();
+  values[kEta2] = t2.eta();
 }
 
 template <typename T1, typename T2, typename T3>

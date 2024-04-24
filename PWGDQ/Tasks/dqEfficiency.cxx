@@ -496,6 +496,7 @@ struct AnalysisSameEventPairing {
   Filter filterMuonSelected = aod::dqanalysisflags::isMuonSelected > 0;
   Configurable<std::string> fConfigTrackCuts{"cfgTrackCuts", "", "Comma separated list of barrel track cuts"};
   Configurable<std::string> fConfigMuonCuts{"cfgMuonCuts", "", "Comma separated list of barrel track cuts"};
+  Configurable<std::string> fConfigMCSignalCuts{"cfgMCSignalCuts", "", "Comma separated list of MC signals"};
   Configurable<std::string> fConfigMCRecSignals{"cfgBarrelMCRecSignals", "", "Comma separated list of MC signals (reconstructed)"};
   Configurable<std::string> fConfigMCGenSignals{"cfgBarrelMCGenSignals", "", "Comma separated list of MC signals (generated)"};
   Configurable<bool> fConfigFlatTables{"cfgFlatTables", false, "Produce a single flat tables with all relevant information of the pairs and single tracks"};
@@ -525,6 +526,7 @@ struct AnalysisSameEventPairing {
   std::vector<std::vector<TString>> fBarrelMuonHistNamesMCmatched;
   std::vector<MCSignal> fRecMCSignals;
   std::vector<MCSignal> fGenMCSignals;
+  std::vector<AnalysisCompositeCut> fGenMCSignalsCuts;
 
   void init(o2::framework::InitContext& context)
   {
@@ -664,6 +666,12 @@ struct AnalysisSameEventPairing {
 
     // Add histogram classes for each specified MCsignal at the generator level
     // TODO: create a std::vector of hist classes to be used at Fill time, to avoid using Form in the process function
+    TString sigGenCutNamesStr = fConfigMCSignalCuts.value;
+    std::unique_ptr<TObjArray> objGenSigCutArray(sigGenCutNamesStr.Tokenize(","));
+    for (int icut = 0; icut < objGenSigCutArray->GetEntries(); icut++) {
+      fGenMCSignalsCuts.push_back(*dqcuts::GetCompositeCut(objGenSigCutArray->At(icut)->GetName()));
+    }
+
     TString sigGenNamesStr = fConfigMCGenSignals.value;
     std::unique_ptr<TObjArray> objGenSigArray(sigGenNamesStr.Tokenize(","));
     for (int isig = 0; isig < objGenSigArray->GetEntries(); isig++) {
@@ -672,9 +680,15 @@ struct AnalysisSameEventPairing {
         if (sig->GetNProngs() == 1) { // NOTE: 1-prong signals required
           fGenMCSignals.push_back(*sig);
           histNames += Form("MCTruthGen_%s;", sig->GetName()); // TODO: Add these names to a std::vector to avoid using Form in the process function
+          for (auto sigCut : fGenMCSignalsCuts) {
+            histNames += Form("MCTruthGen_%s_%s;", sig->GetName(), sigCut.GetName());
+          }
         } else if (sig->GetNProngs() == 2) {                   // NOTE: 2-prong signals required
           fGenMCSignals.push_back(*sig);
           histNames += Form("MCTruthGenPair_%s;", sig->GetName());
+          for (auto sigCut : fGenMCSignalsCuts) {
+            histNames += Form("MCTruthGenPair_%s_%s;", sig->GetName(), sigCut.GetName());
+          }
         }
       }
     }
@@ -860,6 +874,11 @@ struct AnalysisSameEventPairing {
         }
         if (checked) {
           fHistMan->FillHistClass(Form("MCTruthGen_%s", sig.GetName()), VarManager::fgValues);
+          for (auto& sigCut : fGenMCSignalsCuts) {
+            if (sigCut.IsSelected(VarManager::fgValues)) {
+              fHistMan->FillHistClass(Form("MCTruthGen_%s_%s", sig.GetName(), sigCut.GetName()), VarManager::fgValues);
+            }
+          }
         }
       }
     }
@@ -881,6 +900,11 @@ struct AnalysisSameEventPairing {
         if (checked) {
           VarManager::FillPairMC(t1, t2);
           fHistMan->FillHistClass(Form("MCTruthGenPair_%s", sig.GetName()), VarManager::fgValues);
+          for (auto& sigCut : fGenMCSignalsCuts) {
+            if (sigCut.IsSelected(VarManager::fgValues)) {
+              fHistMan->FillHistClass(Form("MCTruthGenPair_%s_%s", sig.GetName(), sigCut.GetName()), VarManager::fgValues);
+            }
+          }
         }
       }
     } // end of true pairing loop

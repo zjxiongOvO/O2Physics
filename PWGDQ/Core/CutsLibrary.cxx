@@ -412,6 +412,11 @@ AnalysisCompositeCut* o2::aod::dqcuts::GetCompositeCut(const char* cutName)
     return cut;
   }
 
+  if (!nameStr.compare("jpsiMCGenPairKine")) {
+    cut->AddCut(GetAnalysisCut("MCGenPairKineJpsi"));
+    return cut;
+  }
+
   if (!nameStr.compare("pionPIDCut1")) {
     cut->AddCut(GetAnalysisCut("pionQualityCut1"));
     cut->AddCut(GetAnalysisCut("pionPIDnsigma"));
@@ -2933,6 +2938,14 @@ AnalysisCut* o2::aod::dqcuts::GetAnalysisCut(const char* cutName)
     cut->AddCut(VarManager::kPt, 0.1, 1000.0);
     cut->AddCut(VarManager::kEta, -0.9, 0.9);
     cut->AddCut(VarManager::kPt, 1.0, 1000.0);
+    return cut;
+  }
+
+  if (!nameStr.compare("MCGenPairKineJpsi")) {
+    cut->AddCut(VarManager::kPt1, 1.0, 1000.0);
+    cut->AddCut(VarManager::kPt2, 1.0, 1000.0);
+    cut->AddCut(VarManager::kEta1, -0.9, 0.9);
+    cut->AddCut(VarManager::kEta2, -0.9, 0.9);
     return cut;
   }
 
