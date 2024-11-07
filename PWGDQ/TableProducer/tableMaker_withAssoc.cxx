@@ -668,12 +668,14 @@ struct TableMaker {
           }
         }
         if (fConfigIsOnlyforMaps) {
-          if (trackFilteringTag & static_cast<uint64_t>(1) << VarManager::kIsConversionLeg)) { // for electron
-            fHistMan->FillHistClass("TrackBarrel_PostCalibElectron", VarManager::fgValues);
-          }
-          if (trackFilteringTag & static_cast<uint64_t>(1) << VarManager::kIsK0sLeg)) { // for pion
-            fHistMan->FillHistClass("TrackBarrel_PostCalibPion", VarManager::fgValues);
-          }
+          if (trackFilteringTag & static_cast<uint64_t>(1) << VarManager::kIsConversionLeg))
+            { // for electron
+              fHistMan->FillHistClass("TrackBarrel_PostCalibElectron", VarManager::fgValues);
+            }
+          if (trackFilteringTag & static_cast<uint64_t>(1) << VarManager::kIsK0sLeg))
+            { // for pion
+              fHistMan->FillHistClass("TrackBarrel_PostCalibPion", VarManager::fgValues);
+            }
           if ((static_cast<bool>(trackFilteringTag & (static_cast<uint64_t>(1) << VarManager::kIsLambdaLeg)) * (track.sign()) > 0)) { // for proton from Lambda
             fHistMan->FillHistClass("TrackBarrel_PostCalibProton", VarManager::fgValues);
           }
