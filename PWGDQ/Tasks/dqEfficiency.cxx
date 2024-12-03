@@ -1359,7 +1359,7 @@ struct AnalysisDileptonTrackTrack {
     // dilepton cut
     TString configDileptonCutNamesStr = fConfigDileptonCut.value;
     fDileptonCut = *dqcuts::GetCompositeCut(configDileptonCutNamesStr.Data());
-    
+
     // dilepton-track-track cuts
     TString configQuadruletCutNamesStr = fConfigQuadrupletCuts.value;
     std::unique_ptr<TObjArray> objArray(configQuadruletCutNamesStr.Tokenize(","));
@@ -1441,7 +1441,8 @@ struct AnalysisDileptonTrackTrack {
 
   // Template function to run pair - track - track combinations
   template <int TCandidateType, uint32_t TEventFillMap, uint32_t TEventMCFillMap, uint32_t TTrackFillMap, typename TEvent, typename TTracks, typename TDileptons, typename TEventsMC, typename TTracksMC>
-  void runDileptonTrackTrack(TEvent const& event, TTracks const& tracks, TDileptons const& dileptons, TEventsMC const& /*eventsMC*/, TTracksMC const& /*tracksMC*/) {
+  void runDileptonTrackTrack(TEvent const& event, TTracks const& tracks, TDileptons const& dileptons, TEventsMC const& /*eventsMC*/, TTracksMC const& /*tracksMC*/)
+  {
     VarManager::ResetValues(0, VarManager::kNVars, fValuesQuadruplet);
     VarManager::FillEvent<TEventFillMap>(event, fValuesQuadruplet);
 
@@ -1461,7 +1462,8 @@ struct AnalysisDileptonTrackTrack {
       VarManager::FillTrack<fgDileptonFillMap>(dilepton, fValuesQuadruplet);
 
       // apply the dilepton cut
-      if (!fDileptonCut.IsSelected(fValuesQuadruplet)) continue;
+      if (!fDileptonCut.IsSelected(fValuesQuadruplet))
+        continue;
 
       // get the index of the electron legs
       int indexLepton1 = dilepton.index0Id();
@@ -1474,7 +1476,7 @@ struct AnalysisDileptonTrackTrack {
 
       auto lepton1 = tracks.iteratorAt(indexLepton1 - indexOffset);
       auto lepton2 = tracks.iteratorAt(indexLepton2 - indexOffset);
-      
+
       auto lepton1MC = lepton1.reducedMCTrack();
       auto lepton2MC = lepton2.reducedMCTrack();
 
@@ -1487,8 +1489,8 @@ struct AnalysisDileptonTrackTrack {
         }
 
         // dilepton combinate with two same particles
-        if ((fIsSameTrackCut && (t1.isBarrelSelected() & (uint32_t(1) << 1)) && (t2.isBarrelSelected() & (uint32_t(1) << 1))) || 
-          (!fIsSameTrackCut && (t1.isBarrelSelected() & (uint32_t(1) << 1)) && (t2.isBarrelSelected() & (uint32_t(1) << 2)))) {
+        if ((fIsSameTrackCut && (t1.isBarrelSelected() & (uint32_t(1) << 1)) && (t2.isBarrelSelected() & (uint32_t(1) << 1))) ||
+            (!fIsSameTrackCut && (t1.isBarrelSelected() & (uint32_t(1) << 1)) && (t2.isBarrelSelected() & (uint32_t(1) << 2)))) {
         } else {
           continue;
         }
@@ -1532,17 +1534,18 @@ struct AnalysisDileptonTrackTrack {
                 }
               }
             }
-            
           }
         } // end loop over cuts
 
         // Fill the DileptonTrackTrackCandidates table
-        if (!CutDecision) continue;
-        if (!mcDecision) continue;
-        DileptonTrackTrackTable(fValuesQuadruplet[VarManager::kQuadMass], fValuesQuadruplet[VarManager::kQuadPt], fValuesQuadruplet[VarManager::kQuadEta], fValuesQuadruplet[VarManager::kQuadPhi], fValuesQuadruplet[VarManager::kRap], 
-                    fValuesQuadruplet[VarManager::kQ], fValuesQuadruplet[VarManager::kDeltaR1], fValuesQuadruplet[VarManager::kDeltaR2], 
-                    dilepton.mass(), dilepton.pt(), dilepton.eta(), dilepton.phi(), dilepton.sign(),
-                    fValuesQuadruplet[VarManager::kDitrackMass], fValuesQuadruplet[VarManager::kDitrackPt], t1.pt(), t2.pt(), t1.eta(), t2.eta(), t1.phi(), t2.phi(), t1.sign(), t2.sign());
+        if (!CutDecision)
+          continue;
+        if (!mcDecision)
+          continue;
+        DileptonTrackTrackTable(fValuesQuadruplet[VarManager::kQuadMass], fValuesQuadruplet[VarManager::kQuadPt], fValuesQuadruplet[VarManager::kQuadEta], fValuesQuadruplet[VarManager::kQuadPhi], fValuesQuadruplet[VarManager::kRap],
+                                fValuesQuadruplet[VarManager::kQ], fValuesQuadruplet[VarManager::kDeltaR1], fValuesQuadruplet[VarManager::kDeltaR2],
+                                dilepton.mass(), dilepton.pt(), dilepton.eta(), dilepton.phi(), dilepton.sign(),
+                                fValuesQuadruplet[VarManager::kDitrackMass], fValuesQuadruplet[VarManager::kDitrackPt], t1.pt(), t2.pt(), t1.eta(), t2.eta(), t1.phi(), t2.phi(), t1.sign(), t2.sign());
       } // end loop over track - track combinations
     } // end loop over dileptons
   };
@@ -1558,7 +1561,7 @@ struct AnalysisDileptonTrackTrack {
           int daughterIdFirst = track.daughtersIds()[0];
           int daughterIdEnd = track.daughtersIds()[1];
           int Ndaughters = daughterIdEnd - daughterIdFirst + 1;
-          if (Ndaughters == 3){
+          if (Ndaughters == 3) {
             auto dilepton = mcTracks.rawIteratorAt(daughterIdFirst);
             auto track1 = mcTracks.rawIteratorAt(daughterIdFirst + 1);
             auto track2 = mcTracks.rawIteratorAt(daughterIdFirst + 2);
