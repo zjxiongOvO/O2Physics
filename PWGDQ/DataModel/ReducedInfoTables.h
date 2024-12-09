@@ -54,11 +54,11 @@ DECLARE_SOA_COLUMN(NTPCpileupZA, nTPCpileupZA, float);           //!  Median Z p
 DECLARE_SOA_COLUMN(NTPCpileupZC, nTPCpileupZC, float);           //!  Median Z position of pileup tracks on C side
 DECLARE_SOA_COLUMN(NTPCtracksInPast, nTPCtracksInPast, int);     //!  Number of TPC tracks in the past events (configurable, but e.g. one drift time)
 DECLARE_SOA_COLUMN(NTPCtracksInFuture, nTPCtracksInFuture, int); //!  Number of TPC tracks in the future events (configurable, but e.g. one drift time)
-DECLARE_SOA_INDEX_COLUMN(Collision, collision); //!
-DECLARE_SOA_BITMAP_COLUMN(Tag, tag, 64);       //!  Bit-field for storing event information (e.g. high level info, cut decisions)
-DECLARE_SOA_COLUMN(MCPosX, mcPosX, float);     //!  MC event position X
-DECLARE_SOA_COLUMN(MCPosY, mcPosY, float);     //!  MC event position Y
-DECLARE_SOA_COLUMN(MCPosZ, mcPosZ, float);     //!  MC event position Z
+DECLARE_SOA_INDEX_COLUMN(Collision, collision);                  //!
+DECLARE_SOA_BITMAP_COLUMN(Tag, tag, 64);                         //!  Bit-field for storing event information (e.g. high level info, cut decisions)
+DECLARE_SOA_COLUMN(MCPosX, mcPosX, float);                       //!  MC event position X
+DECLARE_SOA_COLUMN(MCPosY, mcPosY, float);                       //!  MC event position Y
+DECLARE_SOA_COLUMN(MCPosZ, mcPosZ, float);                       //!  MC event position Z
 DECLARE_SOA_COLUMN(NTPCoccupContribLongA, nTPCoccupContribLongA, int);           //!  TPC pileup occupancy on A side (long time range)
 DECLARE_SOA_COLUMN(NTPCoccupContribLongC, nTPCoccupContribLongC, int);           //!  TPC pileup occupancy on C side (long time range)
 DECLARE_SOA_COLUMN(NTPCoccupMeanTimeLongA, nTPCoccupMeanTimeLongA, float);       //!  TPC pileup mean time on A side (long time range)
