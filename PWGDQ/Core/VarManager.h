@@ -244,6 +244,18 @@ class VarManager : public TObject
     kNTPCpileupZC,
     kNTPCtracksInPast,
     kNTPCtracksInFuture,
+    kNTPCcontribLongA,
+    kNTPCcontribLongC,
+    kNTPCmeanTimeLongA,
+    kNTPCmeanTimeLongC,
+    kNTPCmedianTimeLongA,
+    kNTPCmedianTimeLongC,
+    kNTPCcontribShortA,
+    kNTPCcontribShortC,
+    kNTPCmeanTimeShortA,
+    kNTPCmeanTimeShortC,
+    kNTPCmedianTimeShortA,
+    kNTPCmedianTimeShortC,
     kMCEventGeneratorId,
     kMCEventSubGeneratorId,
     kMCVtxX,
@@ -611,6 +623,7 @@ class VarManager : public TObject
     kCosThetaCS,
     kPhiHE,
     kPhiCS,
+    kPhiVP,
     kDeltaPhiPair2,
     kDeltaEtaPair2,
     kPsiPair,
@@ -1475,12 +1488,18 @@ void VarManager::FillEvent(T const& event, float* values)
     values[kMultAllTracksTPCOnly] = event.multAllTracksTPCOnly();
     values[kMultAllTracksITSTPC] = event.multAllTracksITSTPC();
     if constexpr ((fillMap & ReducedEventMultExtra) > 0) {
-      values[kNTPCpileupContribA] = event.nTPCpileupContribA();
-      values[kNTPCpileupContribC] = event.nTPCpileupContribC();
-      values[kNTPCpileupZA] = event.nTPCpileupZA();
-      values[kNTPCpileupZC] = event.nTPCpileupZC();
-      values[kNTPCtracksInPast] = event.nTPCtracksInPast();
-      values[kNTPCtracksInFuture] = event.nTPCtracksInFuture();
+      values[kNTPCcontribLongA] = event.nTPCoccupContribLongA();
+      values[kNTPCcontribLongC] = event.nTPCoccupContribLongC();
+      values[kNTPCcontribShortA] = event.nTPCoccupContribShortA();
+      values[kNTPCcontribShortC] = event.nTPCoccupContribShortC();
+      values[kNTPCmeanTimeLongA] = event.nTPCoccupMeanTimeLongA();
+      values[kNTPCmeanTimeLongC] = event.nTPCoccupMeanTimeLongC();
+      values[kNTPCmeanTimeShortA] = event.nTPCoccupMeanTimeShortA();
+      values[kNTPCmeanTimeShortC] = event.nTPCoccupMedianTimeShortC();
+      values[kNTPCmedianTimeLongA] = event.nTPCoccupMedianTimeLongA();
+      values[kNTPCmedianTimeLongC] = event.nTPCoccupMedianTimeLongC();
+      values[kNTPCmedianTimeShortA] = event.nTPCoccupMedianTimeShortA();
+      values[kNTPCmedianTimeShortC] = event.nTPCoccupMedianTimeShortC();
     }
   }
   // TODO: need to add EvSels and Cents tables, etc. in case of the central data model
@@ -4337,6 +4356,16 @@ void VarManager::FillPairVn(T1 const& t1, T2 const& t2, float* values)
     values[kCORR2REF] = std::isnan(values[kCORR2REF]) || std::isinf(values[kCORR2REF]) ? 0 : values[kCORR2REF];
     values[kCORR4REF] = std::isnan(values[kCORR4REF]) || std::isinf(values[kCORR4REF]) ? 0 : values[kCORR4REF];
   }
+
+  ROOT::Math::PtEtaPhiMVector v1_vp(v1.Pt(), v1.Eta(), v1.Phi() - Psi2B, v1.M());
+  ROOT::Math::PtEtaPhiMVector v2_vp(v2.Pt(), v2.Eta(), v2.Phi() - Psi2B, v2.M());
+  ROOT::Math::PtEtaPhiMVector v12_vp = v1_vp + v2_vp;
+  auto p12_vp = ROOT::Math::XYZVectorF(v12_vp.Px(), v12_vp.Py(), v12_vp.Pz());
+  auto p12_vp_projXZ = ROOT::Math::XYZVectorF(p12_vp.X(), 0, p12_vp.Z());
+  auto vDimu = (t1.sign() > 0 ? ROOT::Math::XYZVectorF(v1_vp.Px(), v1_vp.Py(), v1_vp.Pz()).Cross(ROOT::Math::XYZVectorF(v2_vp.Px(), v2_vp.Py(), v2_vp.Pz()))
+                              : ROOT::Math::XYZVectorF(v2_vp.Px(), v2_vp.Py(), v2_vp.Pz()).Cross(ROOT::Math::XYZVectorF(v1_vp.Px(), v1_vp.Py(), v1_vp.Pz())));
+  auto vRef = p12_vp.Cross(p12_vp_projXZ);
+  values[kPhiVP] = std::acos(vDimu.Dot(vRef) / (vRef.R() * vDimu.R()));
 }
 
 template <typename T>

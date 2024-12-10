@@ -136,8 +136,12 @@ DECLARE_SOA_TABLE(ReducedEventsMultPV, "AOD", "REMULTPV", //!  Multiplicity info
 
 DECLARE_SOA_TABLE(ReducedEventsMultAll, "AOD", "REMULTALL", //!  Multiplicity information for all tracks in the event
                   mult::MultAllTracksTPCOnly, mult::MultAllTracksITSTPC,
-                  reducedevent::NTPCpileupContribA, reducedevent::NTPCpileupContribC, reducedevent::NTPCpileupZA, reducedevent::NTPCpileupZC,
-                  reducedevent::NTPCtracksInPast, reducedevent::NTPCtracksInFuture);
+                  reducedevent::NTPCoccupContribLongA, reducedevent::NTPCoccupContribLongC,
+                  reducedevent::NTPCoccupMeanTimeLongA, reducedevent::NTPCoccupMeanTimeLongC,
+                  reducedevent::NTPCoccupMedianTimeLongA, reducedevent::NTPCoccupMedianTimeLongC,
+                  reducedevent::NTPCoccupContribShortA, reducedevent::NTPCoccupContribShortC,
+                  reducedevent::NTPCoccupMeanTimeShortA, reducedevent::NTPCoccupMeanTimeShortC,
+                  reducedevent::NTPCoccupMedianTimeShortA, reducedevent::NTPCoccupMedianTimeShortC);
 
 DECLARE_SOA_TABLE(ReducedEventsVtxCov, "AOD", "REVTXCOV", //!    Event vertex covariance matrix
                   collision::CovXX, collision::CovXY, collision::CovXZ,
