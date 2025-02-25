@@ -44,6 +44,7 @@
 #include "DetectorsBase/GeometryManager.h"
 #include "ITSMFTBase/DPLAlpideParam.h"
 #include "Common/CCDB/EventSelectionParams.h"
+#include "EventFiltering/Zorro.h"
 
 using std::cout;
 using std::endl;
@@ -53,6 +54,8 @@ using namespace o2;
 using namespace o2::framework;
 using namespace o2::framework::expressions;
 using namespace o2::aod;
+
+Zorro zorro;
 
 // Some definitions
 namespace o2::aod
@@ -154,11 +157,16 @@ struct AnalysisEventSelection {
   Produces<aod::EventCuts> eventSel;
   Produces<aod::MixingHashes> hash;
   OutputObj<THashList> fOutputList{"output"};
+  OutputObj<TList> fStatsList{"Statistics"};
   // TODO: Provide the mixing variables and binning directly via configurables (e.g. vectors of float)
   Configurable<string> fConfigMixingVariables{"cfgMixingVars", "", "Mixing configs separated by a comma, default no mixing"};
   Configurable<string> fConfigEventCuts{"cfgEventCuts", "eventStandard", "Event selection"};
   Configurable<bool> fConfigQA{"cfgQA", false, "If true, fill QA histograms"};
   Configurable<bool> fConfigRunZorro{"cfgRunZorro", false, "Enable event selection with zorro [WARNING: under debug, do not enable!]"};
+  Configurable<string> fConfigZorroTrigMask{"cfgZorroTriggerMask", "fDiElectron", "DQ Trigger masks: fSingleE,fLMeeIMR,fLMeeHMR,fDiElectron,fSingleMuLow,fSingleMuHigh,fDiMuon"};
+  Configurable<bool> fConfigRunZorroQA{"cfgRunZorroQA", false, "Select events with trigger mask"};
+  Configurable<uint64_t> fBcTolerance{"cfgBcTolerance", 100, "Number of BCs of margin for software triggers"};
+  Configurable<string> fConfigCcdbPathZorro{"ccdb-path-zorro", "/Users/m/mpuccio/EventFiltering/OTS/", "base path to the ccdb object for zorro"};
   Configurable<int> fConfigITSROFrameStartBorderMargin{"ITSROFrameStartBorderMargin", -1, "Number of bcs at the start of ITS RO Frame border. Take from CCDB if -1"};
   Configurable<int> fConfigITSROFrameEndBorderMargin{"ITSROFrameEndBorderMargin", -1, "Number of bcs at the end of ITS RO Frame border. Take from CCDB if -1"};
   Configurable<std::string> fConfigAddEventHistogram{"cfgAddEventHistogram", "", "Comma separated list of histograms"};
@@ -202,6 +210,14 @@ struct AnalysisEventSelection {
       }
     }
 
+    fStatsList.setObject(new TList());
+    fStatsList->SetOwner(kTRUE);
+    TH2D* histZorroInfo = new TH2D("ZorroInfo", "Zorro information", 1, -0.5, 0.5, 1, -0.5, 0.5);
+    fStatsList->Add(histZorroInfo); // At index 0
+
+    TH2D* histZorroSel = new TH2D("ZorroSel", "trigger of interested", 1, -0.5, 0.5, 1, -0.5, 0.5);
+    fStatsList->Add(histZorroSel); // At index 1
+
     // CCDB configuration
     fCCDB->setURL(fConfigCcdbUrl.value);
     fCCDB->setCaching(true);
@@ -231,6 +247,15 @@ struct AnalysisEventSelection {
     // TODO: make this condition at compile time
     if (fConfigQA) {
       fHistMan->FillHistClass("Event_BeforeCuts", VarManager::fgValues); // automatically fill all the histograms in the class Event
+    }
+
+    // make a QA of Zorro
+    if (fConfigRunZorroQA) {
+      zorro.setBaseCCDBPath(fConfigCcdbPathZorro.value);
+      zorro.setBCtolerance(fBcTolerance);
+      zorro.initCCDB(fCCDB.service, fLastRun, event.timestamp(), fConfigZorroTrigMask.value);
+      zorro.populateExternalHists(fCurrentRun, reinterpret_cast<TH2D*>(fStatsList->At(0)), reinterpret_cast<TH2D*>(fStatsList->At(1));
+      bool zorroSel = zorro.isSelected(event.globalBC(), useZorro.fBcTolerance, reinterpret_cast<TH2D*>(fStatsList->At(1)));
     }
 
     if (!fConfigRunZorro) {
