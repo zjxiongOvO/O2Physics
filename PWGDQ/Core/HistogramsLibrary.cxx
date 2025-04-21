@@ -1777,7 +1777,7 @@ void o2::aod::dqhistograms::DefineHistograms(HistogramManager* hm, const char* h
     }
   }
   if (!groupStr.CompareTo("dilepton-dihadron")) {
-    if (subGroupStr.EqualTo("xtojpsipipi")) {
+    if (subGroupStr.Contains("xtojpsipipi")) {
       hm->AddHistogram(histClass, "hMass_X3872", "", false, 1000, 3.0, 5.0, VarManager::kQuadMass);
       hm->AddHistogram(histClass, "hMass_defaultDileptonMass_X3872", "", false, 1000, 3.0, 5.0, VarManager::kQuadDefaultDileptonMass);
       hm->AddHistogram(histClass, "hPt_X3872", "", false, 150, 0.0, 15.0, VarManager::kQuadPt);
@@ -1810,6 +1810,28 @@ void o2::aod::dqhistograms::DefineHistograms(HistogramManager* hm, const char* h
       hm->AddHistogram(histClass, "hPtTrack1", "", false, 100, 0.0, 10.0, VarManager::kPt);
       hm->AddHistogram(histClass, "hMass_defaultDileptonMass_PtTrack1", "", false, 100, 3.0, 5.0, VarManager::kQuadDefaultDileptonMass, 100, 0.0, 10.0, VarManager::kPt);
       hm->AddHistogram(histClass, "hMass_PtTrack1", "", false, 100, 3.0, 5.0, VarManager::kQuadMass, 100, 0.0, 10.0, VarManager::kPt);
+    }
+    if (subGroupStr.Contains("vertexing")) {
+      hm->AddHistogram(histClass, "UsedKF", "", false, 2, -0.5, 1.5, VarManager::kUsedKF);
+      hm->AddHistogram(histClass, "KFMass", "", false, 750, 0.0, 30.0, VarManager::kKFMass);
+      hm->AddHistogram(histClass, "Lz", "", false, 1000, -2.0, 2.0, VarManager::kVertexingLz);
+      hm->AddHistogram(histClass, "Lxy", "", false, 1000, -2.0, 2.0, VarManager::kVertexingLxy);
+      hm->AddHistogram(histClass, "Lxyz", "", false, 1000, -2.0, 2.0, VarManager::kVertexingLxyz);
+      hm->AddHistogram(histClass, "Tauz", "", false, 4000, -0.01, 0.01, VarManager::kVertexingTauz);
+      hm->AddHistogram(histClass, "Tauxy", "", false, 4000, -0.01, 0.01, VarManager::kVertexingTauxy);
+      hm->AddHistogram(histClass, "LxyzErr", "", false, 100, 0.0, 10.0, VarManager::kVertexingLxyzErr);
+      hm->AddHistogram(histClass, "LzErr", "", false, 100, 0.0, 10.0, VarManager::kVertexingLzErr);
+      hm->AddHistogram(histClass, "TauzErr", "", false, 100, 0.0, 10.0, VarManager::kVertexingTauzErr);
+      hm->AddHistogram(histClass, "VtxingProcCode", "", false, 10, 0.0, 10.0, VarManager::kVertexingProcCode);
+      hm->AddHistogram(histClass, "VtxingChi2PCA", "", false, 100, 0.0, 10.0, VarManager::kVertexingChi2PCA);
+      hm->AddHistogram(histClass, "LzProj", "", false, 1000, -2.0, 2.0, VarManager::kVertexingLzProjected);
+      hm->AddHistogram(histClass, "LxyProj", "", false, 1000, -2.0, 2.0, VarManager::kVertexingLxyProjected);
+      hm->AddHistogram(histClass, "LxyzProj", "", false, 1000, -2.0, 2.0, VarManager::kVertexingLxyzProjected);
+      hm->AddHistogram(histClass, "TauzProj", "", false, 4000, -0.5, 0.5, VarManager::kVertexingTauzProjected);
+      hm->AddHistogram(histClass, "TauxyProj", "", false, 4000, -0.5, 0.5, VarManager::kVertexingTauxyProjected);
+      hm->AddHistogram(histClass, "CosPointingAngle", "", false, 100, 0.0, 1.0, VarManager::kCosPointingAngle);
+      hm->AddHistogram(histClass, "DCAxyzBetweenProngs", "", false, 100, 0.0, 1.0, VarManager::kKFDCAxyzBetweenProngs);
+      hm->AddHistogram(histClass, "KFChi2OverNDFGeo", "", false, 150, -5, 10, VarManager::kKFChi2OverNDFGeo);
     }
   }
   if (!groupStr.CompareTo("dilepton-photon-mass")) {
