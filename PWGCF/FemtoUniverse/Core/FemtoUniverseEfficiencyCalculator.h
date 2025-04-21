@@ -10,169 +10,104 @@
 // or submit itself to any jurisdiction.
 
 /// \file FemtoUniverseEfficiencyCalculator.h
-/// \brief Abstraction for calculating efficiency and applying corrections with the help of CCDB
+/// \brief Abstraction for applying corrections based on efficiency from CCDB
 /// \author Dawid Karpiński, WUT Warsaw, dawid.karpinski@cern.ch
 
 #ifndef PWGCF_FEMTOUNIVERSE_CORE_FEMTOUNIVERSEEFFICIENCYCALCULATOR_H_
 #define PWGCF_FEMTOUNIVERSE_CORE_FEMTOUNIVERSEEFFICIENCYCALCULATOR_H_
 
 #include <vector>
-#include <memory>
 #include <map>
 #include <string>
+#include <algorithm>
 
 #include "Framework/Configurable.h"
-#include "Framework/AnalysisHelpers.h"
-#include "Framework/CallbackService.h"
-#include "Framework/InitContext.h"
 #include "CCDB/BasicCCDBManager.h"
 #include "PWGCF/FemtoUniverse/DataModel/FemtoDerived.h"
 #include "FemtoUniverseParticleHisto.h"
 
 namespace o2::analysis::femto_universe::efficiency
 {
-template <uint8_t T>
-concept isOneOrTwo = T == 1 || T == 2;
-
-struct EfficiencyConfigurableGroup : ConfigurableGroup {
-  Configurable<bool> confEfficiencyCalculate{"confEfficiencyCalculate", false, "Should calculate efficiency"};
-  Configurable<bool> confEfficiencyApplyCorrections{"confEfficiencyApplyCorrections", false, "Should apply corrections from efficiency"};
-
-  Configurable<std::vector<std::string>> confCCDBLabels{"confCCDBLabels", std::vector<std::string>{"label1", "label2"}, "Labels for efficiency objects in CCDB"};
-
-  OutputObj<TH1F> hEfficiency1{"Efficiency part1"};
-  OutputObj<TH1F> hEfficiency2{"Efficiency part2"};
-
-  // TODO: move to separate struct?
-  Configurable<std::string> confCCDBUrl{"confCCDBUrl", "http://alice-ccdb.cern.ch", "CCDB URL to be used"};
-  Configurable<std::string> confCCDBPath{"confCCDBPath", "", "CCDB base path to where to upload objects"};
-  Configurable<int64_t> confCCDBTimestamp{"confCCDBTimestamp", -1, "Timestamp from which to query CCDB objects"};
-
-  // TODO: declare this in task directly?
-  FemtoUniverseParticleHisto<aod::femtouniverseparticle::ParticleType::kMCTruthTrack, 1> hMCTruth1;
-  FemtoUniverseParticleHisto<aod::femtouniverseparticle::ParticleType::kMCTruthTrack, 2> hMCTruth2;
+enum ParticleNo : size_t {
+  ONE = 1,
+  TWO,
 };
 
+template <size_t T>
+concept isOneOrTwo = T == ParticleNo::ONE || T == ParticleNo::TWO;
+
+template <typename T>
+consteval auto getHistDim() -> int
+{
+  if (std::is_same_v<T, TH1>)
+    return 1;
+  else if (std::is_same_v<T, TH2>)
+    return 2;
+  else if (std::is_same_v<T, TH3>)
+    return 3;
+  else
+    return -1;
+}
+
+struct EfficiencyConfigurableGroup : ConfigurableGroup {
+  Configurable<bool> confEfficiencyApplyCorrections{"confEfficiencyApplyCorrections", false, "Should apply corrections from efficiency"};
+  Configurable<int> confEfficiencyCCDBTrainNumber{"confEfficiencyCCDBTrainNumber", 0, "Train number for which to query CCDB objects (set 0 to ignore)"};
+  Configurable<std::vector<std::string>> confEfficiencyCCDBTimestamps{"confEfficiencyCCDBTimestamps", {}, "Timestamps of efficiency histograms in CCDB, to query for specific objects (default: [], set 0 to ignore, useful when running subwagons)"};
+
+  // NOTE: in the future we might move the below configurables to a separate struct, eg. CCDBConfigurableGroup
+  Configurable<std::string> confCCDBUrl{"confCCDBUrl", "http://alice-ccdb.cern.ch", "CCDB URL to be used"};
+  Configurable<std::string> confCCDBPath{"confCCDBPath", "", "CCDB base path to where to upload objects"};
+};
+
+template <typename HistType>
+  requires std::is_base_of_v<TH1, HistType>
 class EfficiencyCalculator
 {
  public:
-  o2::ccdb::BasicCCDBManager& ccdb{o2::ccdb::BasicCCDBManager::instance()};
-
   explicit EfficiencyCalculator(EfficiencyConfigurableGroup* config) : config(config) // o2-linter: disable=name/function-variable
   {
   }
 
   auto init() -> void
   {
-    ccdbApi.init(config->confCCDBUrl);
     ccdb.setURL(config->confCCDBUrl);
     ccdb.setLocalObjectValidityChecking();
     ccdb.setFatalWhenNull(false);
 
-    shouldCalculate = config->confEfficiencyCalculate;
+    auto now = duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    ccdb.setCreatedNotAfter(now);
+
     shouldApplyCorrections = config->confEfficiencyApplyCorrections;
 
-    ccdbFullPath = fmt::format("{}/{}", config->confCCDBPath.value, folderName);
+    if (config->confEfficiencyApplyCorrections && !config->confEfficiencyCCDBTimestamps.value.empty()) {
+      for (auto idx = 0UL; idx < config->confEfficiencyCCDBTimestamps.value.size(); idx++) {
+        auto timestamp = 0L;
+        try {
+          timestamp = std::max(0L, std::stol(config->confEfficiencyCCDBTimestamps.value[idx]));
+        } catch (const std::exception&) {
+          LOGF(error, notify("Could not parse CCDB timestamp \"%s\""), config->confEfficiencyCCDBTimestamps.value[idx]);
+          continue;
+        }
 
-    if (config->confEfficiencyCalculate) {
-      hOutput = {config->hEfficiency1.object, config->hEfficiency2.object};
-    }
-
-    if (config->confEfficiencyApplyCorrections) {
-      hLoaded = {
-        loadEfficiencyFromCCDB<1>(config->confCCDBTimestamp),
-        loadEfficiencyFromCCDB<2>(config->confCCDBTimestamp) //
-      };
-    }
-  }
-
-  template <uint8_t N>
-    requires isOneOrTwo<N>
-  auto doMCTruth(auto particles) const -> void
-  {
-    for (const auto& particle : particles) {
-      if constexpr (N == 1) {
-        config->hMCTruth1.fillQA<false, false>(particle);
-      } else if constexpr (N == 2) {
-        config->hMCTruth2.fillQA<false, false>(particle);
+        hLoaded[idx] = timestamp > 0 ? loadEfficiencyFromCCDB(timestamp) : nullptr;
       }
     }
   }
 
-  auto uploadOnStop(InitContext& ic) -> void
-  {
-    if (!shouldCalculate) {
-      return;
-    }
-
-    if (!shouldUploadOnStop) {
-      shouldUploadOnStop = true;
-
-      auto& callbacks = ic.services().get<CallbackService>();
-      callbacks.set<o2::framework::CallbackService::Id::Stop>([this]() {
-        for (auto i = 0UL; i < hOutput.size(); i++) {
-          const auto& output = hOutput[i];
-
-          if (isHistogramEmpty(output.get())) {
-            LOGF(error, notify("Histogram %d is empty - save aborted"), i + 1);
-            return;
-          }
-          LOGF(debug, notify("Found histogram %d: %s"), i + 1, output->GetTitle());
-
-          int64_t now = duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-          int64_t oneYear = 365LL * 24 * 60 * 60 * 1000;
-
-          if (ccdbApi.storeAsTFileAny(output.get(), ccdbFullPath, createMetadata(i), now, now + oneYear) == 0) {
-            LOGF(info, notify("Histogram %d saved successfully"), i + 1);
-          } else {
-            LOGF(fatal, notify("Histogram %d save failed"), i + 1);
-          }
-        }
-      });
-    } else {
-      LOGF(warn, notify("Uploading on stop callback is already set up"));
-    }
-  }
-
-  template <uint8_t N>
-    requires isOneOrTwo<N>
-  auto getWeight(auto const& particle) const -> float
+  template <typename... BinVars>
+    requires(sizeof...(BinVars) == getHistDim<HistType>())
+  auto getWeight(ParticleNo partNo, const BinVars&... binVars) const -> float
   {
     auto weight = 1.0f;
-    auto hEff = hLoaded[N - 1];
+    auto hEff = hLoaded[partNo - 1];
 
     if (shouldApplyCorrections && hEff) {
-      auto bin = hEff->FindBin(particle.pt());
+      auto bin = hEff->FindBin(binVars...);
       auto eff = hEff->GetBinContent(bin);
       weight /= eff > 0 ? eff : 1.0f;
     }
 
     return weight;
-  }
-
-  template <uint8_t N>
-    requires isOneOrTwo<N>
-  auto calculate(std::shared_ptr<TH1> truth, std::shared_ptr<TH1> reco) const
-  {
-    if (!shouldCalculate) {
-      return;
-    }
-
-    if (!truth || !reco) {
-      LOGF(error, notify("MC Truth & MC Reco histograms cannot be null"));
-      return;
-    }
-
-    auto hEff = hOutput[N - 1];
-    if (!hEff) {
-      LOGF(error, notify("No OutputObj specified for particle %d histogram"), N);
-      return;
-    }
-
-    for (auto bin = 0; bin < hEff->GetNbinsX(); bin++) {
-      auto denom = truth->GetBinContent(bin);
-      hEff->SetBinContent(bin, denom == 0 ? 0 : reco->GetBinContent(bin) / denom);
-    }
   }
 
  private:
@@ -181,60 +116,47 @@ class EfficiencyCalculator
     return fmt::format("[EFFICIENCY] {}", msg);
   }
 
-  static auto isHistogramEmpty(TH1* hist) -> bool
+  static auto isHistEmpty(HistType* hist) -> bool
   {
     if (!hist) {
       return true;
     }
-
-    // check overflow bins as well
     for (auto idx = 0; idx <= hist->GetNbinsX() + 1; idx++) {
-      if (hist->GetBinContent(idx) != 0) {
+      if (hist->GetBinContent(idx) > 0) {
         return false;
       }
     }
-
     return true;
   }
 
-  auto createMetadata(uint8_t partNo) const -> std::map<std::string, std::string>
+  auto loadEfficiencyFromCCDB(const int64_t timestamp) const -> HistType*
   {
-    if (config->confCCDBLabels->size() != 2) {
-      LOGF(fatal, notify("CCDB labels configurable should be exactly of size 2"));
-    }
-    return std::map<std::string, std::string>{
-      {"label", config->confCCDBLabels.value[partNo]} //
-    };
-  }
+    std::map<std::string, std::string> metadata{};
 
-  template <uint8_t N>
-    requires isOneOrTwo<N>
-  auto loadEfficiencyFromCCDB(int64_t timestamp) const -> TH1*
-  {
-    auto hEff = ccdb.getSpecific<TH1>(ccdbFullPath, timestamp, createMetadata(N - 1));
+    if (config->confEfficiencyCCDBTrainNumber > 0) {
+      metadata["trainNumber"] = std::to_string(config->confEfficiencyCCDBTrainNumber);
+    }
+
+    auto hEff = ccdb.getSpecific<HistType>(config->confCCDBPath, timestamp, metadata);
     if (!hEff || hEff->IsZombie()) {
-      LOGF(error, notify("Could not load histogram from %s"), config->confCCDBPath.value);
+      LOGF(error, notify("Could not load histogram \"%s/%ld\""), config->confCCDBPath.value, timestamp);
       return nullptr;
     }
 
-    LOGF(info, notify("Histogram \"%s\" loaded from \"%s\""), hEff->GetTitle(), config->confCCDBPath.value);
+    if (isHistEmpty(hEff)) {
+      LOGF(warn, notify("Histogram \"%s/%ld\" has been loaded, but it is empty"), config->confCCDBPath.value, timestamp);
+    }
+
+    LOGF(info, notify("Successfully loaded %ld"), timestamp);
     return hEff;
   }
 
   EfficiencyConfigurableGroup* config{};
 
-  bool shouldUploadOnStop = false;
-  bool shouldCalculate = false;
   bool shouldApplyCorrections = false;
 
-  std::array<std::shared_ptr<TH1>, 2> hOutput{};
-  std::array<TH1*, 2> hLoaded{};
-
-  o2::ccdb::CcdbApi ccdbApi{};
-  std::string ccdbFullPath{};
-
-  static constexpr std::string_view folderName{"Efficiency"};
-  static constexpr std::array<std::string_view, 3> histSuffix{"", "_one", "_two"};
+  o2::ccdb::BasicCCDBManager& ccdb{o2::ccdb::BasicCCDBManager::instance()};
+  std::array<HistType*, 2> hLoaded{};
 };
 
 } // namespace o2::analysis::femto_universe::efficiency
