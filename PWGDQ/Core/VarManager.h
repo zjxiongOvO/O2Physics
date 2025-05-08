@@ -4900,7 +4900,6 @@ void VarManager::FillDileptonTrackTrackVertexing(C const& collision, T1 const& l
                                            track2.c1PtY(), track2.c1PtZ(), track2.c1PtSnp(), track2.c1PtTgl(), track2.c1Pt21Pt2()};
     o2::track::TrackParCov pars4{track2.x(), track2.alpha(), track2pars, track2covs};
     
-
     procCodeDilepton = VarManager::fgFitterTwoProngBarrel.process(pars1, pars2);
     // create dilepton track
     // o2::track::TrackParCov parsDilepton = VarManager::fgFitterTwoProngBarrel.createParentTrackParCov(0);
@@ -5013,17 +5012,17 @@ void VarManager::FillDileptonTrackTrackVertexing(C const& collision, T1 const& l
     KFPVertex kfpVertex = createKFPVertexFromCollision(collision);
     values[kKFNContributorsPV] = kfpVertex.GetNContributors();
     KFParticle KFPV(kfpVertex);
-    double dxTriplet2PV = KFGeoFourProng.GetX() - KFPV.GetX();
-    double dyTriplet2PV = KFGeoFourProng.GetY() - KFPV.GetY();
-    double dzTriplet2PV = KFGeoFourProng.GetZ() - KFPV.GetZ();
+    double dxQuadlet2PV = KFGeoFourProng.GetX() - KFPV.GetX();
+    double dyQuadlet2PV = KFGeoFourProng.GetY() - KFPV.GetY();
+    double dzQuadlet2PV = KFGeoFourProng.GetZ() - KFPV.GetZ();
 
-    values[kVertexingLxy] = std::sqrt(dxTriplet2PV * dxTriplet2PV + dyTriplet2PV * dyTriplet2PV);
-    values[kVertexingLz] = std::sqrt(dzTriplet2PV * dzTriplet2PV);
-    values[kVertexingLxyz] = std::sqrt(dxTriplet2PV * dxTriplet2PV + dyTriplet2PV * dyTriplet2PV + dzTriplet2PV * dzTriplet2PV);
+    values[kVertexingLxy] = std::sqrt(dxQuadlet2PV * dxQuadlet2PV + dyQuadlet2PV * dyQuadlet2PV);
+    values[kVertexingLz] = std::sqrt(dzQuadlet2PV * dzQuadlet2PV);
+    values[kVertexingLxyz] = std::sqrt(dxQuadlet2PV * dxQuadlet2PV + dyQuadlet2PV * dyQuadlet2PV + dzQuadlet2PV * dzQuadlet2PV);
 
-    values[kVertexingLxyErr] = (KFPV.GetCovariance(0) + KFGeoFourProng.GetCovariance(0)) * dxTriplet2PV * dxTriplet2PV + (KFPV.GetCovariance(2) + KFGeoFourProng.GetCovariance(2)) * dyTriplet2PV * dyTriplet2PV + 2 * ((KFPV.GetCovariance(1) + KFGeoFourProng.GetCovariance(1)) * dxTriplet2PV * dyTriplet2PV);
-    values[kVertexingLzErr] = (KFPV.GetCovariance(5) + KFGeoFourProng.GetCovariance(5)) * dzTriplet2PV * dzTriplet2PV;
-    values[kVertexingLxyzErr] = (KFPV.GetCovariance(0) + KFGeoFourProng.GetCovariance(0)) * dxTriplet2PV * dxTriplet2PV + (KFPV.GetCovariance(2) + KFGeoFourProng.GetCovariance(2)) * dyTriplet2PV * dyTriplet2PV + (KFPV.GetCovariance(5) + KFGeoFourProng.GetCovariance(5)) * dzTriplet2PV * dzTriplet2PV + 2 * ((KFPV.GetCovariance(1) + KFGeoFourProng.GetCovariance(1)) * dxTriplet2PV * dyTriplet2PV + (KFPV.GetCovariance(3) + KFGeoFourProng.GetCovariance(3)) * dxTriplet2PV * dzTriplet2PV + (KFPV.GetCovariance(4) + KFGeoFourProng.GetCovariance(4)) * dyTriplet2PV * dzTriplet2PV);
+    values[kVertexingLxyErr] = (KFPV.GetCovariance(0) + KFGeoFourProng.GetCovariance(0)) * dxQuadlet2PV * dxQuadlet2PV + (KFPV.GetCovariance(2) + KFGeoFourProng.GetCovariance(2)) * dyQuadlet2PV * dyQuadlet2PV + 2 * ((KFPV.GetCovariance(1) + KFGeoFourProng.GetCovariance(1)) * dxQuadlet2PV * dyQuadlet2PV);
+    values[kVertexingLzErr] = (KFPV.GetCovariance(5) + KFGeoFourProng.GetCovariance(5)) * dzQuadlet2PV * dzQuadlet2PV;
+    values[kVertexingLxyzErr] = (KFPV.GetCovariance(0) + KFGeoFourProng.GetCovariance(0)) * dxQuadlet2PV * dxQuadlet2PV + (KFPV.GetCovariance(2) + KFGeoFourProng.GetCovariance(2)) * dyQuadlet2PV * dyQuadlet2PV + (KFPV.GetCovariance(5) + KFGeoFourProng.GetCovariance(5)) * dzQuadlet2PV * dzQuadlet2PV + 2 * ((KFPV.GetCovariance(1) + KFGeoFourProng.GetCovariance(1)) * dxQuadlet2PV * dyQuadlet2PV + (KFPV.GetCovariance(3) + KFGeoFourProng.GetCovariance(3)) * dxQuadlet2PV * dzQuadlet2PV + (KFPV.GetCovariance(4) + KFGeoFourProng.GetCovariance(4)) * dyQuadlet2PV * dzQuadlet2PV);
 
     if (fabs(values[kVertexingLxy]) < 1.e-8f)
       values[kVertexingLxy] = 1.e-8f;
@@ -5036,21 +5035,21 @@ void VarManager::FillDileptonTrackTrackVertexing(C const& collision, T1 const& l
     values[kVertexingLxyzErr] = values[kVertexingLxyzErr] < 0. ? 1.e8f : std::sqrt(values[kVertexingLxyzErr]) / values[kVertexingLxyz];
   
     values[kVertexingTauxy] = KFGeoFourProng.GetPseudoProperDecayTime(KFPV, KFGeoFourProng.GetMass()) / (o2::constants::physics::LightSpeedCm2NS);
-    values[kVertexingTauz] = -1 * dzTriplet2PV * KFGeoFourProng.GetMass() / (TMath::Abs(KFGeoFourProng.GetPz()) * o2::constants::physics::LightSpeedCm2NS);
+    values[kVertexingTauz] = -1 * dzQuadlet2PV * KFGeoFourProng.GetMass() / (TMath::Abs(KFGeoFourProng.GetPz()) * o2::constants::physics::LightSpeedCm2NS);
     values[kVertexingPz] = TMath::Abs(KFGeoFourProng.GetPz());
     values[kVertexingSV] = KFGeoFourProng.GetZ();
 
     values[kVertexingTauxyErr] = values[kVertexingLxyErr] * KFGeoFourProng.GetMass() / (KFGeoFourProng.GetPt() * o2::constants::physics::LightSpeedCm2NS);
     values[kVertexingTauzErr] = values[kVertexingLzErr] * KFGeoFourProng.GetMass() / (TMath::Abs(KFGeoFourProng.GetPz()) * o2::constants::physics::LightSpeedCm2NS);
-    values[kCosPointingAngle] = (std::sqrt(dxTriplet2PV * dxTriplet2PV) * v1234.Px() +
-                                  std::sqrt(dyTriplet2PV * dyTriplet2PV) * v1234.Py() +
-                                  std::sqrt(dzTriplet2PV * dzTriplet2PV) * v1234.Pz()) /
+    values[kCosPointingAngle] = (std::sqrt(dxQuadlet2PV * dxQuadlet2PV) * v1234.Px() +
+                                  std::sqrt(dyQuadlet2PV * dyQuadlet2PV) * v1234.Py() +
+                                  std::sqrt(dzQuadlet2PV * dzQuadlet2PV) * v1234.Pz()) /
                                 (v1234.P() * values[VarManager::kVertexingLxyz]);
     // // run 2 definitions: Decay length projected onto the momentum vector of the candidate
-    values[kVertexingLzProjected] = (dzTriplet2PV * KFGeoFourProng.GetPz()) / TMath::Sqrt(KFGeoFourProng.GetPz() * KFGeoFourProng.GetPz());
-    values[kVertexingLxyProjected] = (dxTriplet2PV * KFGeoFourProng.GetPx()) + (dyTriplet2PV * KFGeoFourProng.GetPy());
+    values[kVertexingLzProjected] = (dzQuadlet2PV * KFGeoFourProng.GetPz()) / TMath::Sqrt(KFGeoFourProng.GetPz() * KFGeoFourProng.GetPz());
+    values[kVertexingLxyProjected] = (dxQuadlet2PV * KFGeoFourProng.GetPx()) + (dyQuadlet2PV * KFGeoFourProng.GetPy());
     values[kVertexingLxyProjected] = values[kVertexingLxyProjected] / TMath::Sqrt((KFGeoFourProng.GetPx() * KFGeoFourProng.GetPx()) + (KFGeoFourProng.GetPy() * KFGeoFourProng.GetPy()));
-    values[kVertexingLxyzProjected] = (dxTriplet2PV * KFGeoFourProng.GetPx()) + (dyTriplet2PV * KFGeoFourProng.GetPy()) + (dzTriplet2PV * KFGeoFourProng.GetPz());
+    values[kVertexingLxyzProjected] = (dxQuadlet2PV * KFGeoFourProng.GetPx()) + (dyQuadlet2PV * KFGeoFourProng.GetPy()) + (dzQuadlet2PV * KFGeoFourProng.GetPz());
     values[kVertexingLxyzProjected] = values[kVertexingLxyzProjected] / TMath::Sqrt((KFGeoFourProng.GetPx() * KFGeoFourProng.GetPx()) + (KFGeoFourProng.GetPy() * KFGeoFourProng.GetPy()) + (KFGeoFourProng.GetPz() * KFGeoFourProng.GetPz()));
     values[kVertexingTauxyProjected] = values[kVertexingLxyProjected] * KFGeoFourProng.GetMass() / (KFGeoFourProng.GetPt());
     values[kVertexingTauxyProjectedNs] = values[kVertexingTauxyProjected] / o2::constants::physics::LightSpeedCm2NS;
