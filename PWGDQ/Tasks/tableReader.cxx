@@ -101,6 +101,7 @@ using MyEventsVtxCovSelectedQvector = soa::Join<aod::ReducedEvents, aod::Reduced
 using MyEventsVtxCovQvectorExtraWithRefFlow = soa::Join<aod::ReducedEvents, aod::ReducedEventsExtended, aod::ReducedEventsVtxCov, aod::ReducedEventsQvector, aod::ReducedEventsQvectorExtra, aod::ReducedEventsRefFlow>;
 using MyEventsVtxCovSelectedQvectorExtraWithRefFlow = soa::Join<aod::ReducedEvents, aod::ReducedEventsExtended, aod::ReducedEventsVtxCov, aod::EventCuts, aod::ReducedEventsQvector, aod::ReducedEventsQvectorExtra, aod::ReducedEventsRefFlow>;
 using MyEventsVtxCovSelectedQvectorCentr = soa::Join<aod::ReducedEvents, aod::ReducedEventsExtended, aod::ReducedEventsVtxCov, aod::EventCuts, aod::ReducedEventsQvectorCentr>;
+using MyEventsQvectorCentrSelected = soa::Join<aod::ReducedEvents, aod::ReducedEventsExtended, aod::ReducedEventsQvectorCentr, aod::EventCuts>;
 using MyEventsQvector = soa::Join<aod::ReducedEvents, aod::ReducedEventsExtended, aod::ReducedEventsQvector>;
 using MyEventsQvectorMultExtra = soa::Join<aod::ReducedEvents, aod::ReducedEventsExtended, aod::ReducedEventsQvector, aod::ReducedEventsMultPV, aod::ReducedEventsMultAll>;
 using MyEventsQvectorCentr = soa::Join<aod::ReducedEvents, aod::ReducedEventsExtended, aod::ReducedEventsQvectorCentr>;
@@ -1630,12 +1631,19 @@ struct AnalysisSameEventPairing {
     VarManager::FillEvent<gkEventFillMap>(event, VarManager::fgValues);
     runSameEventPairing<true, VarManager::kDecayToMuMu, gkEventFillMap, gkMuonFillMapWithColl>(event, muons, muons);
   }
-  void processVnDecayToEESkimmed(soa::Filtered<MyEventsVtxCovSelectedQvector>::iterator const& event, soa::Filtered<MyBarrelTracksSelected> const& tracks)
+  // void processVnDecayToEESkimmed(soa::Filtered<MyEventsVtxCovSelectedQvector>::iterator const& event, soa::Filtered<MyBarrelTracksSelected> const& tracks)
+  // {
+  //   // Reset the fValues array
+  //   VarManager::ResetValues(0, VarManager::kNVars);
+  //   VarManager::FillEvent<gkEventFillMapWithCovQvector>(event, VarManager::fgValues);
+  //   runSameEventPairing<true, VarManager::kDecayToEE, gkEventFillMapWithCovQvector, gkTrackFillMap>(event, tracks, tracks);
+  // }
+  void processVnDecayToEESkimmed(soa::Filtered<MyEventsQvectorCentrSelected>::iterator const& event, soa::Filtered<MyBarrelTracksSelected> const& tracks)
   {
     // Reset the fValues array
     VarManager::ResetValues(0, VarManager::kNVars);
-    VarManager::FillEvent<gkEventFillMapWithCovQvector>(event, VarManager::fgValues);
-    runSameEventPairing<true, VarManager::kDecayToEE, gkEventFillMapWithCovQvector, gkTrackFillMap>(event, tracks, tracks);
+    VarManager::FillEvent<gkEventFillMapWithQvectorCentr>(event, VarManager::fgValues);
+    runSameEventPairing<true, VarManager::kDecayToEE, gkEventFillMapWithQvectorCentr, gkTrackFillMap>(event, tracks, tracks);
   }
   void processVnDecayToMuMuSkimmed(soa::Filtered<MyEventsVtxCovSelectedQvector>::iterator const& event, soa::Filtered<MyMuonTracksSelected> const& muons)
   {

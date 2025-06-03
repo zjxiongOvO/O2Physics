@@ -238,6 +238,12 @@ void o2::aod::dqhistograms::DefineHistograms(HistogramManager* hm, const char* h
       hm->AddHistogram(histClass, "Q2Y0B", "", false, 500, -10.0, 10.0, VarManager::kQ2Y0B);
       hm->AddHistogram(histClass, "Q2X0C", "", false, 500, -10.0, 10.0, VarManager::kQ2X0C);
       hm->AddHistogram(histClass, "Q2Y0C", "", false, 500, -10.0, 10.0, VarManager::kQ2Y0C);
+      hm->AddHistogram(histClass, "Q2X0A_Q2Y0A", "", false, 200, -10.0, 10.0, VarManager::kQ2X0A, 200, -10.0, 10.0, VarManager::kQ2Y0A);
+      hm->AddHistogram(histClass, "Q2X0B_Q2Y0B", "", false, 200, -10.0, 10.0, VarManager::kQ2X0B, 200, -10.0, 10.0, VarManager::kQ2Y0B);
+      hm->AddHistogram(histClass, "Q2X0C_Q2Y0C", "", false, 200, -10.0, 10.0, VarManager::kQ2X0C, 200, -10.0, 10.0, VarManager::kQ2Y0C);
+      hm->AddHistogram(histClass, "Q2X0A_Q2Y0A_CentFT0C", "", false, 18, 0.0, 90.0, VarManager::kCentFT0C, 500, -10.0, 10.0, VarManager::kQ2X0A, 500, -10.0, 10.0, VarManager::kQ2Y0A);
+      hm->AddHistogram(histClass, "Q2X0B_Q2Y0B_CentFT0C", "", false, 18, 0.0, 90.0, VarManager::kCentFT0C, 500, -10.0, 10.0, VarManager::kQ2X0B, 500, -10.0, 10.0, VarManager::kQ2Y0B);
+      hm->AddHistogram(histClass, "Q2X0C_Q2Y0C_CentFT0C", "", false, 18, 0.0, 90.0, VarManager::kCentFT0C, 500, -10.0, 10.0, VarManager::kQ2X0C, 500, -10.0, 10.0, VarManager::kQ2Y0C);
       hm->AddHistogram(histClass, "Q2X0A_VtxZ", "", true, 60, -15.0, 15.0, VarManager::kVtxZ, 500, -10.0, 10.0, VarManager::kQ2X0A);
       hm->AddHistogram(histClass, "Q2Y0A_VtxZ", "", true, 60, -15.0, 15.0, VarManager::kVtxZ, 500, -10.0, 10.0, VarManager::kQ2Y0A);
       hm->AddHistogram(histClass, "Q2X0B_VtxZ", "", true, 60, -15.0, 15.0, VarManager::kVtxZ, 500, -10.0, 10.0, VarManager::kQ2X0B);
@@ -949,14 +955,79 @@ void o2::aod::dqhistograms::DefineHistograms(HistogramManager* hm, const char* h
         hm->AddHistogram(histClass, "VtxZ_VtxNcontribReal", "VtxZ vs VtxNcontribReal", false, 240, -12.0, 12.0, VarManager::kVtxZ, 200, 0, 200.0, VarManager::kVtxNcontribReal);
       }
       if (subGroupStr.Contains("polarization")) {
-        hm->AddHistogram(histClass, "cosThetaHE", "", false, 100, -1., 1., VarManager::kCosThetaHE);
-        hm->AddHistogram(histClass, "cosThetaCS", "", false, 100, -1., 1., VarManager::kCosThetaCS);
-        hm->AddHistogram(histClass, "PhiHE", "", false, 100, -o2::constants::math::PI, o2::constants::math::PI, VarManager::kPhiHE);
-        hm->AddHistogram(histClass, "PhiCS", "", false, 100, -o2::constants::math::PI, o2::constants::math::PI, VarManager::kPhiCS);
-        hm->AddHistogram(histClass, "Mass_Pt_cosThetaHE", "", false, 100, 1.0, 5.0, VarManager::kMass, 250, 0.0, 25.0, VarManager::kPt, 40, -1., 1., VarManager::kCosThetaHE);
-        hm->AddHistogram(histClass, "Mass_Pt_cosThetaCS", "", false, 100, 1.0, 5.0, VarManager::kMass, 250, 0.0, 25.0, VarManager::kPt, 40, -1., 1., VarManager::kCosThetaCS);
-        hm->AddHistogram(histClass, "Mass_Pt_PhiHE", "", false, 100, 1.0, 5.0, VarManager::kMass, 250, 0.0, 25.0, VarManager::kPt, 40, -o2::constants::math::PI, o2::constants::math::PI, VarManager::kPhiHE);
-        hm->AddHistogram(histClass, "Mass_Pt_PhiCS", "", false, 100, 1.0, 5.0, VarManager::kMass, 250, 0.0, 25.0, VarManager::kPt, 40, -o2::constants::math::PI, o2::constants::math::PI, VarManager::kPhiCS);
+        if (subGroupStr.Contains("helicity")) {
+          hm->AddHistogram(histClass, "cosThetaHE", "", false, 100, -1., 1., VarManager::kCosThetaHE);
+          hm->AddHistogram(histClass, "phiHE", "", false, 100, 0, 2 * o2::constants::math::PI, VarManager::kPhiHE);
+          hm->AddHistogram(histClass, "phitildeHE", "", false, 100, 0, 2 * o2::constants::math::PI, VarManager::kPhiTildeHE);
+          hm->AddHistogram(histClass, "Mass_Pt_CosThetaHE", "", false, 200, 1.0, 5.0, VarManager::kMass, 40, 0.0, 20.0, VarManager::kPt, 20, -1., 1., VarManager::kCosThetaHE);
+          hm->AddHistogram(histClass, "Mass_Pt_PhiHE", "", false, 200, 1.0, 5.0, VarManager::kMass, 40, 0.0, 20.0, VarManager::kPt, 100, 0., 2 * o2::constants::math::PI, VarManager::kPhiHE);
+          hm->AddHistogram(histClass, "Mass_Pt_PhiTildeHE", "", false, 200, 1.0, 5.0, VarManager::kMass, 40, 0.0, 20.0, VarManager::kPt, 100, 0., 2 * o2::constants::math::PI, VarManager::kPhiTildeHE);
+        }
+        if (subGroupStr.Contains("collins-soper")) {
+          hm->AddHistogram(histClass, "cosThetaCS", "", false, 100, -1., 1., VarManager::kCosThetaCS);
+          hm->AddHistogram(histClass, "phiCS", "", false, 100, 0, 2 * o2::constants::math::PI, VarManager::kPhiCS);
+          hm->AddHistogram(histClass, "phitildeCS", "", false, 100, 0, 2 * o2::constants::math::PI, VarManager::kPhiTildeCS);
+          hm->AddHistogram(histClass, "Mass_Pt_CosThetaCS", "", false, 200, 1.0, 5.0, VarManager::kMass, 40, 0.0, 20.0, VarManager::kPt, 20, -1., 1., VarManager::kCosThetaCS);
+          hm->AddHistogram(histClass, "Mass_Pt_PhiCS", "", false, 200, 1.0, 5.0, VarManager::kMass, 40, 0.0, 20.0, VarManager::kPt, 100, 0., 2 * o2::constants::math::PI, VarManager::kPhiCS);
+          hm->AddHistogram(histClass, "Mass_Pt_PhiTildeCS", "", false, 200, 1.0, 5.0, VarManager::kMass, 40, 0.0, 20.0, VarManager::kPt, 100, 0., 2 * o2::constants::math::PI, VarManager::kPhiTildeCS);
+        }
+        if (subGroupStr.Contains("production")) {
+          hm->AddHistogram(histClass, "cosThetaPP", "", false, 100, -1., 1., VarManager::kCosThetaPP);
+          hm->AddHistogram(histClass, "phiPP", "", false, 100, 0, 2 * o2::constants::math::PI, VarManager::kPhiPP);
+          hm->AddHistogram(histClass, "phitildePP", "", false, 100, 0, 2 * o2::constants::math::PI, VarManager::kPhiTildePP);
+          hm->AddHistogram(histClass, "Mass_Pt_CosThetaPP", "", false, 100, 1.0, 5.0, VarManager::kMass, 40, 0.0, 20.0, VarManager::kPt, 20, -1., 1., VarManager::kCosThetaPP);
+          hm->AddHistogram(histClass, "Mass_Pt_PhiPP", "", false, 100, 1.0, 5.0, VarManager::kMass, 40, 0.0, 20.0, VarManager::kPt, 20, 0., 2 * o2::constants::math::PI, VarManager::kPhiPP);
+          hm->AddHistogram(histClass, "Mass_Pt_PhiTildePP", "", false, 100, 1.0, 5.0, VarManager::kMass, 40, 0.0, 20.0, VarManager::kPt, 20, 0., 2 * o2::constants::math::PI, VarManager::kPhiTildePP);
+        }
+        if (subGroupStr.Contains("random")) {
+          hm->AddHistogram(histClass, "cosThetaRM", "", false, 100, -1., 1., VarManager::kCosThetaRM);
+          hm->AddHistogram(histClass, "Mass_Pt_CosThetaRM", "", false, 200, 1.0, 5.0, VarManager::kMass, 40, 0.0, 20.0, VarManager::kPt, 20, -1., 1., VarManager::kCosThetaRM);
+        }
+      }
+      if (subGroupStr.Contains("globalpolarization")) {
+        hm->AddHistogram(histClass, "kR2EP_AB", "", false, 100, -1.0, 1.0, VarManager::kR2EP_AB);
+        hm->AddHistogram(histClass, "kR2EP_AC", "", false, 100, -1.0, 1.0, VarManager::kR2EP_AC);
+        hm->AddHistogram(histClass, "kR2EP_BC", "", false, 100, -1.0, 1.0, VarManager::kR2EP_BC);
+        hm->AddHistogram(histClass, "CosThetaStarA", "", false, 100, -1.0, 1.0, VarManager::kCosThetaStarA);
+        hm->AddHistogram(histClass, "Mass_CosThetaStarA", "", false, 200, 1.0, 5.0, VarManager::kMass, 100, -1.0, 1.0, VarManager::kCosThetaStarA);
+        hm->AddHistogram(histClass, "CosThetaStarB", "", false, 100, -1.0, 1.0, VarManager::kCosThetaStarB);
+        hm->AddHistogram(histClass, "Mass_CosThetaStarB", "", false, 200, 1.0, 5.0, VarManager::kMass, 100, -1.0, 1.0, VarManager::kCosThetaStarB);
+        hm->AddHistogram(histClass, "CosThetaStarC", "", false, 100, -1.0, 1.0, VarManager::kCosThetaStarC);
+        hm->AddHistogram(histClass, "Mass_CosThetaStarC", "", false, 200, 1.0, 5.0, VarManager::kMass, 100, -1.0, 1.0, VarManager::kCosThetaStarC);
+        
+        const int kNvarsPair = 4;
+        const int kInvMassNbins = 200;
+        double InvMassBinLims[kInvMassNbins + 1];
+        for (int i = 0; i <= kInvMassNbins; ++i) {
+          InvMassBinLims[i] = 1.0 + (0.02 * i);
+        }
+
+        const int kPtNbins = 10;
+        double PtBinLims[kPtNbins + 1];
+        for (int i = 0; i <= kPtNbins; ++i) {
+          PtBinLims[i] = 0.0 + (1.0 * i);
+        }
+
+        const int kCosthetaNBins = 20;
+        double CosthetaBinLims[kCosthetaNBins + 1];
+        for (int i = 0; i <= kCosthetaNBins; ++i) {
+          CosthetaBinLims[i] = -1.0 + (2.0 / kCosthetaNBins * i);
+        }
+
+        const int CentBinNbins = 20;
+        double CentBinLims[CentBinNbins + 1];
+        for (int i = 0; i <= CentBinNbins; ++i) {
+          CentBinLims[i] = 0.0 + (100.0 / CentBinNbins * i);
+        }
+
+        TArrayD nCutsBinLimits[kNvarsPair];
+        nCutsBinLimits[0] = TArrayD(kInvMassNbins + 1, InvMassBinLims);
+        nCutsBinLimits[1] = TArrayD(kPtNbins + 1, PtBinLims);
+        nCutsBinLimits[2] = TArrayD(kCosthetaNBins + 1, CosthetaBinLims);
+        nCutsBinLimits[3] = TArrayD(CentBinNbins + 1, CentBinLims);
+
+        int varsPair[kNvarsPair] = {VarManager::kMass, VarManager::kPt, VarManager::kCosThetaStarA, VarManager::kCentFT0C};
+        hm->AddHistogram(histClass, "Mass_Pt_CosThetaStarA_CentFT0C", "Invariant mass vs. pT vs. cos(theta*) vs. centrality", kNvarsPair, varsPair, nCutsBinLimits);
       }
       if (subGroupStr.Contains("upsilon")) {
         hm->AddHistogram(histClass, "MassUpsilon_Pt", "", false, 500, 7.0, 12.0, VarManager::kMass, 400, 0.0, 40.0, VarManager::kPt);
