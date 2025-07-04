@@ -1192,6 +1192,7 @@ struct AnalysisSameEventPairing {
   Produces<aod::DileptonFlow> dileptonFlowList;
   Produces<aod::DileptonsInfo> dileptonInfoList;
   Produces<aod::JPsieeCandidates> PromptNonPromptSepTable;
+  Produces<aod::DileptonPolarization> dileptonPolarizationTable;
 
   o2::base::MatLayerCylSet* fLUT = nullptr;
   int fCurrentRun; // needed to detect if the run changed and trigger update of calibrations etc.
@@ -1217,6 +1218,7 @@ struct AnalysisSameEventPairing {
     Configurable<std::string> grpMagPath{"grpmagPath", "GLO/Config/GRPMagField", "CCDB path of the GRPMagField object"};
     Configurable<std::string> lutPath{"lutPath", "GLO/Param/MatLUT", "Path of the Lut parametrization"};
     Configurable<std::string> geoPath{"geoPath", "GLO/Config/GeometryAligned", "Path of the geometry file"};
+    Configurable<std::string> GrpLhcIfPath{"grplhcif", "GLO/Config/GRPLHCIF", "Path on the CCDB for the GRPLHCIF object"};
   } fConfigCCDB;
 
   struct : ConfigurableGroup {
@@ -1231,6 +1233,7 @@ struct AnalysisSameEventPairing {
     Configurable<std::string> collisionSystem{"syst", "pp", "Collision system, pp or PbPb"};
     Configurable<float> centerMassEnergy{"energy", 13600, "Center of mass energy in GeV"};
     Configurable<bool> propTrack{"cfgPropTrack", true, "Propgate tracks to associated collision to recalculate DCA and momentum vector"};
+    Configurable<bool> useRemoteCollisionInformation{"cfgUseRemoteCollisionInformation", false, "Use remote collision information from CCDB"};
   } fConfigOptions;
 
   Service<o2::ccdb::BasicCCDBManager> fCCDB;
@@ -1551,6 +1554,11 @@ struct AnalysisSameEventPairing {
     uint64_t sor = std::atol(header["SOR"].c_str());
     uint64_t eor = std::atol(header["EOR"].c_str());
     VarManager::SetSORandEOR(sor, eor);
+
+    if (fConfigOptions.useRemoteCollisionInformation) {
+      o2::parameters::GRPLHCIFData* grpo = fCCDB->getForTimeStamp<o2::parameters::GRPLHCIFData>(fConfigCCDB.GrpLhcIfPath, timestamp);
+      VarManager::SetCollisionSystem(grpo);
+    }
   }
 
   // Template function to run same event pairing (barrel-barrel, muon-muon, barrel-muon)
@@ -1600,6 +1608,7 @@ struct AnalysisSameEventPairing {
     if (fConfigOptions.flatTables.value) {
       dielectronAllList.reserve(1);
       dimuonAllList.reserve(1);
+      dileptonPolarizationTable.reserve(1);
     }
     fAmbiguousPairs.clear();
     constexpr bool eventHasQvector = ((TEventFillMap & VarManager::ObjTypes::ReducedEventQvector) > 0);
@@ -1674,6 +1683,14 @@ struct AnalysisSameEventPairing {
           if constexpr ((TTrackFillMap & VarManager::ObjTypes::ReducedTrackCollInfo) > 0) {
             dielectronInfoList(t1.collisionId(), t1.trackId(), t2.trackId());
             dileptonInfoList(t1.collisionId(), event.posX(), event.posY(), event.posZ());
+          }
+
+          if (fConfigOptions.flatTables.value) {
+             dileptonPolarizationTable(VarManager::fgValues[VarManager::kCosThetaHE], VarManager::fgValues[VarManager::kPhiHE], VarManager::fgValues[VarManager::kPhiTildeHE],
+                                        VarManager::fgValues[VarManager::kCosThetaCS], VarManager::fgValues[VarManager::kPhiCS], VarManager::fgValues[VarManager::kPhiTildeCS],
+                                        VarManager::fgValues[VarManager::kCosThetaPP], VarManager::fgValues[VarManager::kPhiPP], VarManager::fgValues[VarManager::kPhiTildePP],
+                                        VarManager::fgValues[VarManager::kCosThetaRM],
+                                        VarManager::fgValues[VarManager::kCosThetaStarTPC], VarManager::fgValues[VarManager::kCosThetaStarFT0A], VarManager::fgValues[VarManager::kCosThetaStarFT0C]);
           }
           if constexpr (trackHasCov && TTwoProngFitter) {
             dielectronsExtraList(t1.globalIndex(), t2.globalIndex(), VarManager::fgValues[VarManager::kVertexingTauzProjected], VarManager::fgValues[VarManager::kVertexingLzProjected], VarManager::fgValues[VarManager::kVertexingLxyProjected]);
@@ -1771,7 +1788,7 @@ struct AnalysisSameEventPairing {
                             VarManager::fgValues[VarManager::kCos2DeltaPhi], VarManager::fgValues[VarManager::kCos3DeltaPhi],
                             VarManager::fgValues[VarManager::kCORR2POI], VarManager::fgValues[VarManager::kCORR4POI], VarManager::fgValues[VarManager::kM01POI], VarManager::fgValues[VarManager::kM0111POI], VarManager::fgValues[VarManager::kMultDimuons],
                             VarManager::fgValues[VarManager::kVertexingPz], VarManager::fgValues[VarManager::kVertexingSV]);
-            }
+            } 
             if constexpr ((TTrackFillMap & VarManager::ObjTypes::ReducedMuonCollInfo) > 0) {
               if constexpr (eventHasQvector == true || eventHasQvectorCentr == true) {
                 dileptonFlowList(t1.collisionId(), VarManager::fgValues[VarManager::kMass], VarManager::fgValues[VarManager::kCentFT0C],

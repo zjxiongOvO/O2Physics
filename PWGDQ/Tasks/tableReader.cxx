@@ -1014,6 +1014,7 @@ struct AnalysisSameEventPairing {
   Produces<aod::DileptonFlow> dileptonFlowList;
   Produces<aod::DileptonsInfo> dileptonInfoList;
   Produces<aod::DileptonsMiniTree> dileptonMiniTree;
+  Produces<aod::DileptonPolarization> dileptonPolarizationTable;
   float mMagField = 0.0;
   o2::parameters::GRPMagField* grpmag = nullptr;
   o2::base::MatLayerCylSet* lut = nullptr;
@@ -1045,7 +1046,9 @@ struct AnalysisSameEventPairing {
   Configurable<bool> fNoCorr{"cfgNoCorrFwdProp", false, "Do not correct for MCS effects in track propagation"};
   Configurable<std::string> lutPath{"lutPath", "GLO/Param/MatLUT", "Path of the Lut parametrization"};
   Configurable<std::string> geoPath{"geoPath", "GLO/Config/GeometryAligned", "Path of the geometry file"};
+  Configurable<std::string> GrpLhcIfPath{"grplhcif", "GLO/Config/GRPLHCIF", "Path on the CCDB for the GRPLHCIF object"};
   Configurable<std::string> fCollisionSystem{"syst", "pp", "Collision system, pp or PbPb"};
+  Configurable<bool> useRemoteCollisionInformation{"cfgUseRemoteCollisionInformation", false, "Use remote collision information from CCDB"};
   Configurable<float> fCenterMassEnergy{"energy", 13600, "Center of mass energy in GeV"};
   Configurable<bool> fConfigCumulants{"cfgCumulants", false, "If true, fill Cumulants with Weights different than 0"};
   Configurable<std::string> fConfigAddJSONHistograms{"cfgAddJSONHistograms", "", "Histograms in JSON format"};
@@ -1225,7 +1228,7 @@ struct AnalysisSameEventPairing {
     // ccdb->setCreatedNotAfter(nolaterthan.value);
 
     VarManager::SetCollisionSystem((TString)fCollisionSystem, fCenterMassEnergy); // set collision system and center of mass energy
-
+    
     DefineHistograms(fHistMan, histNames.Data(), fConfigAddSEPHistogram);                  // define all histograms
     dqhistograms::AddHistogramsFromJSON(fHistMan, fConfigAddJSONHistograms.value.c_str()); // ad-hoc histograms via JSON
     VarManager::SetUseVars(fHistMan->GetUsedVars());                                       // provide the list of required variables so that VarManager knows what to fill
@@ -1278,6 +1281,11 @@ struct AnalysisSameEventPairing {
           LOGF(fatal, "Resolution factor is not available in CCDB at timestamp=%llu", event.timestamp());
         }
       }
+
+      if (useRemoteCollisionInformation) {
+        o2::parameters::GRPLHCIFData* grpo = ccdb->getForTimeStamp<o2::parameters::GRPLHCIFData>(GrpLhcIfPath, event.timestamp());
+        VarManager::SetCollisionSystem(grpo);
+      }
       fCurrentRun = event.runNumber();
     }
 
@@ -1307,6 +1315,7 @@ struct AnalysisSameEventPairing {
     if (fConfigFlatTables.value) {
       dielectronAllList.reserve(1);
       dimuonAllList.reserve(1);
+      dileptonPolarizationTable.reserve(1);
     }
     if (useMiniTree.fConfigMiniTree) {
       dileptonMiniTree.reserve(1);
@@ -1388,6 +1397,13 @@ struct AnalysisSameEventPairing {
         if constexpr ((TTrackFillMap & VarManager::ObjTypes::ReducedTrackCollInfo) > 0) {
           dielectronInfoList(t1.collisionId(), t1.trackId(), t2.trackId());
         }
+      }
+      if (fConfigFlatTables.value) {
+        dileptonPolarizationTable(VarManager::fgValues[VarManager::kCosThetaHE], VarManager::fgValues[VarManager::kPhiHE], VarManager::fgValues[VarManager::kPhiTildeHE],
+                                  VarManager::fgValues[VarManager::kCosThetaCS], VarManager::fgValues[VarManager::kPhiCS], VarManager::fgValues[VarManager::kPhiTildeCS],
+                                  VarManager::fgValues[VarManager::kCosThetaPP], VarManager::fgValues[VarManager::kPhiPP], VarManager::fgValues[VarManager::kPhiTildePP],
+                                  VarManager::fgValues[VarManager::kCosThetaRM],
+                                  VarManager::fgValues[VarManager::kCosThetaStarTPC], VarManager::fgValues[VarManager::kCosThetaStarFT0A], VarManager::fgValues[VarManager::kCosThetaStarFT0C]);
       }
       if constexpr ((TPairType == pairTypeEE) && (TTrackFillMap & VarManager::ObjTypes::ReducedTrackBarrelPID) > 0) {
         if (fConfigFlatTables.value) {
