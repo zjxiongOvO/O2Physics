@@ -1192,8 +1192,6 @@ class VarManager : public TObject
   static void SetVariableDependencies(); // toggle those variables on which other used variables might depend
 
   static float fgMagField;
-  // static float fgCenterOfMassEnergy;      // collision energy
-  // static float fgMassofCollidingParticle; // mass of the colliding particle
   static float fgTPCInterSectorBoundary;  // TPC inter-sector border size at the TPC outer radius, in cm
   static int fgITSROFbias;                // ITS ROF bias (from ALPIDE parameters)
   static int fgITSROFlength;              // ITS ROF length (from ALPIDE parameters)
@@ -2872,17 +2870,6 @@ void VarManager::FillPair(T1 const& t1, T2 const& t2, float* values)
   bool useRM = fgUsedVars[kCosThetaRM];                       // Random frame
 
   if (useHE || useCS || usePP || useRM) {
-    // TO DO: get the correct values from CCDB
-    // double BeamMomentum = TMath::Sqrt(fgCenterOfMassEnergy * fgCenterOfMassEnergy / 4 - fgMassofCollidingParticle * fgMassofCollidingParticle); // GeV
-    // ROOT::Math::PxPyPzEVector Beam1(0., 0., -BeamMomentum, fgCenterOfMassEnergy / 2);
-    // ROOT::Math::PxPyPzEVector Beam2(0., 0., BeamMomentum, fgCenterOfMassEnergy / 2);
-
-    // ROOT::Math::Boost boostv12{v12.BoostToCM()};
-    // ROOT::Math::XYZVectorF v1_CM{(boostv12(v1).Vect()).Unit()};
-    // ROOT::Math::XYZVectorF v2_CM{(boostv12(v2).Vect()).Unit()};
-    // ROOT::Math::XYZVectorF Beam1_CM{(boostv12(Beam1).Vect()).Unit()};
-    // ROOT::Math::XYZVectorF Beam2_CM{(boostv12(Beam2).Vect()).Unit()};
- 
     ROOT::Math::Boost boostv12{v12.BoostToCM()};
     ROOT::Math::XYZVectorF v1_CM{(boostv12(v1).Vect()).Unit()};
     ROOT::Math::XYZVectorF v2_CM{(boostv12(v2).Vect()).Unit()};
@@ -3393,17 +3380,6 @@ void VarManager::FillPairMC(T1 const& t1, T2 const& t2, float* values)
   bool useRM = fgUsedVars[kMCCosThetaRM];                         // Random frame
 
   if (useHE || useCS || usePP || useRM) {
-    // // TO DO: get the correct values from CCDB
-    // double BeamMomentum = TMath::Sqrt(fgCenterOfMassEnergy * fgCenterOfMassEnergy / 4 - fgMassofCollidingParticle * fgMassofCollidingParticle); // GeV
-    // ROOT::Math::PxPyPzEVector Beam1(0., 0., -BeamMomentum, fgCenterOfMassEnergy / 2);
-    // ROOT::Math::PxPyPzEVector Beam2(0., 0., BeamMomentum, fgCenterOfMassEnergy / 2);
-
-    // ROOT::Math::Boost boostv12{v12.BoostToCM()};
-    // ROOT::Math::XYZVectorF v1_CM{(boostv12(v1).Vect()).Unit()};
-    // ROOT::Math::XYZVectorF v2_CM{(boostv12(v2).Vect()).Unit()};
-    // ROOT::Math::XYZVectorF Beam1_CM{(boostv12(Beam1).Vect()).Unit()};
-    // ROOT::Math::XYZVectorF Beam2_CM{(boostv12(Beam2).Vect()).Unit()};
-
     ROOT::Math::Boost boostv12{v12.BoostToCM()};
     ROOT::Math::XYZVectorF v1_CM{(boostv12(v1).Vect()).Unit()};
     ROOT::Math::XYZVectorF v2_CM{(boostv12(v2).Vect()).Unit()};
