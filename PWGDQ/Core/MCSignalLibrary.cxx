@@ -205,7 +205,7 @@ MCSignal* o2::aod::dqmcsignals::GetMCSignal(const char* name)
     prong.SetSignalInTime(true);
     signal = new MCSignal(name, "Decay of anything into J/psi", {prong}, {-1});
     return signal;
-  } 
+  }
   if (!nameStr.compare("eeFromNonpromptPsi2S")) {
     MCProng prong(2, {11, 100443}, {true, true}, {false, false}, {0, 0}, {0, 0}, {false, false}, false, {503}, {false});
     signal = new MCSignal(name, "ee pairs from non-prompt psi2s decays", {prong, prong}, {1, 1}); // signal at pair level
