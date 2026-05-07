@@ -897,6 +897,13 @@ struct AnalysisTrackSelection {
     runTrackSelection<gkEventFillMapWithMults, gkTrackFillMapWithCov>(assocs, bcs, events, tracks, eventsMC, tracksMC);
     cout << "AnalysisTrackSelection::processWithCov() completed" << endl;
   }
+  void processPbPbWithCov(TrackAssoc const& assocs, BCsWithTimestamps const& bcs, MyEventsSelectedWithCentAndMults const& events, MyBarrelTracksWithCov const& tracks,
+                        McCollisions const& eventsMC, McParticles const& tracksMC)
+  {
+    cout << "AnalysisTrackSelection::processPbPbWithCov() called" << endl;
+    runTrackSelection<gkEventFillMapWithCentAndMults, gkTrackFillMapWithCov>(assocs, bcs, events, tracks, eventsMC, tracksMC);
+    cout << "AnalysisTrackSelection::processPbPbWithCov() completed" << endl;
+  }
   void processWithCovTOFService(TrackAssoc const& assocs, BCsWithTimestamps const& bcs, MyEventsSelected const& events, MyBarrelTracksWithCovNoTOF const& tracks,
                                 McCollisions const& eventsMC, McParticles const& tracksMC)
   {
@@ -912,6 +919,7 @@ struct AnalysisTrackSelection {
   }
 
   PROCESS_SWITCH(AnalysisTrackSelection, processWithCov, "Run barrel track selection on DQ skimmed tracks w/ cov matrix associations", false);
+  PROCESS_SWITCH(AnalysisTrackSelection, processPbPbWithCov, "Run PbPb barrel track selection on DQ skimmed tracks w/ cov matrix associations", false);
   PROCESS_SWITCH(AnalysisTrackSelection, processWithCovTOFService, "Run barrel track selection on DQ skimmed tracks w/ cov matrix associations, with TOF service", false);
   PROCESS_SWITCH(AnalysisTrackSelection, processDummy, "Dummy function", true);
 };
