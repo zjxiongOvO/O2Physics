@@ -68,6 +68,8 @@
 #include <KFPTrack.h>
 #include <KFPVertex.h>
 #include <KFParticle.h>
+#include <rapidjson/document.h>
+#include <rapidjson/error/error.h>
 
 #include <GPUROOTCartesianFwd.h>
 #include <Rtypes.h>
@@ -926,6 +928,8 @@ class VarManager : public TObject
     kS12,
     kS13,
     kS23,
+    kPairEfficiency,
+    kPairWeight,
     kNPairVariables,
 
     // Candidate-track correlation variables
@@ -1109,6 +1113,13 @@ class VarManager : public TObject
     kTPCProtonSigma,
     kTPCProtonStatus,
     kNCalibObjects
+  };
+
+  enum EfficiencyType {
+    kNone = 0,
+    kPairPtCentFT0cCosThetaStarFT0c,
+    // Add more efficiency types as needed
+    kNEfficiencyTypes
   };
 
   enum DileptonCharmHadronTypes {
@@ -1461,7 +1472,8 @@ class VarManager : public TObject
     fgUseInterpolatedCalibration = useInterpolation;
   }
   static double ComputePIDcalibration(int species, double nSigmaValue);
-
+  static void SetEfficiencyObject(int type, TObject* obj);
+  static void FillEfficiency(float* values = nullptr);
   static TObject* GetCalibrationObject(CalibObjects calib)
   {
     auto obj = fgCalibs.find(calib);
@@ -1519,6 +1531,7 @@ class VarManager : public TObject
 
   // static void FillEventDerived(float* values = nullptr);
   static void FillTrackDerived(float* values = nullptr);
+  // static void FillPairDerived(float* values = nullptr);
   template <typename T, typename U, typename V>
   static auto getRotatedCovMatrixXX(const T& matrix, U phi, V theta);
   template <typename T>
@@ -1544,6 +1557,9 @@ class VarManager : public TObject
   static bool fgRunTPCPostCalibration[4];           // 0-electron, 1-pion, 2-kaon, 3-proton
   static int fgCalibrationType;                     // 0 - no calibration, 1 - calibration vs (TPCncls,pIN,eta) typically for pp, 2 - calibration vs (eta,nPV,nLong,tLong) typically for PbPb
   static bool fgUseInterpolatedCalibration;         // use interpolated calibration histograms (default: true)
+
+  static int fgEfficiencyType;      // type of efficiency correction to apply
+  static TObject* fgEfficiencyHist; // histogram for efficiency correction
 
   VarManager& operator=(const VarManager& c);
   VarManager(const VarManager& c);
